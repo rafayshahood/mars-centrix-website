@@ -1,13 +1,32 @@
 import Link from 'next/link'
 import { ArrowRight, CheckCircle, Building, Briefcase, Factory, Heart, DollarSign, Gavel } from 'lucide-react'
 import type { Metadata } from 'next'
+import { Package } from '@/lib/supabase'
+import siteConfig from '@/config/site-config'
 
 export const metadata: Metadata = {
   title: 'Custom Packages - Mars Centrix | Tailored AI Automation Solutions',
   description: 'Explore our custom automation packages designed for your specific industry and business needs. From consultation to deployment, we handle the entire workflow transformation.',
 }
 
-export default function Packages() {
+// Fetch packages from Supabase
+async function getPackages(): Promise<Package[]> {
+  try {
+    const response = await fetch(`${process.env.NEXT_PUBLIC_SUPABASE_URL ? 'http://localhost:3000' : ''}/api/packages`, {
+      cache: 'no-store' // Always fetch fresh data
+    })
+    if (!response.ok) return []
+    const data = await response.json()
+    return data.packages || []
+  } catch (error) {
+    console.error('Error fetching packages:', error)
+    return []
+  }
+}
+
+export default async function Packages() {
+  const packages = await getPackages()
+
   return (
     <>
 
@@ -22,202 +41,47 @@ export default function Packages() {
             </p>
           </div>
           
-          <div className="grid lg:grid-cols-3 gap-8">
-            {/* Starter Package */}
-            <div className="card">
-              <div className="text-center mb-6">
-                <h3 className="text-2xl font-bold mb-2">Starter Package</h3>
-                <div className="text-4xl font-bold text-primary mb-4">$2,997</div>
-              </div>
-              
-              <p className="text-text-soft text-center mb-6">
-                Perfect for small businesses looking to automate their first workflow and see immediate ROI. 
-                Get started with AI automation without the complexity.
-              </p>
-              
-              <div className="mb-6">
-                <h4 className="font-semibold mb-3">What's Included</h4>
-                <ul className="space-y-3">
-                  <li className="flex items-start gap-3">
-                    <CheckCircle className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />
-                    <span className="text-sm text-text-soft">1 custom workflow automation</span>
-                  </li>
-                  <li className="flex items-start gap-3">
-                    <CheckCircle className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />
-                    <span className="text-sm text-text-soft">Up to 3 tool integrations</span>
-                  </li>
-                  <li className="flex items-start gap-3">
-                    <CheckCircle className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />
-                    <span className="text-sm text-text-soft">Basic monitoring dashboard</span>
-                  </li>
-                  <li className="flex items-start gap-3">
-                    <CheckCircle className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />
-                    <span className="text-sm text-text-soft">2 weeks implementation</span>
-                  </li>
-                  <li className="flex items-start gap-3">
-                    <CheckCircle className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />
-                    <span className="text-sm text-text-soft">1 month support included</span>
-                  </li>
-                  <li className="flex items-start gap-3">
-                    <CheckCircle className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />
-                    <span className="text-sm text-text-soft">Training for up to 5 team members</span>
-                  </li>
-                </ul>
-              </div>
-              
-              <div className="space-y-3 mb-6">
-                <div className="p-3 bg-surface rounded-lg border border-border-subtle">
-                  <div className="text-sm font-medium text-text">Ideal for:</div>
-                  <div className="text-xs text-text-soft">Small teams, single department automation, first-time AI adopters</div>
-                </div>
-                <div className="p-3 bg-surface rounded-lg border border-border-subtle">
-                  <div className="text-sm font-medium text-text">Timeline:</div>
-                  <div className="text-xs text-text-soft">2-3 weeks from kickoff to deployment</div>
-                </div>
-              </div>
-              
-              <Link href="/#meeting" className="btn btn-primary btn-full">
-                Get Started
-              </Link>
+          {packages.length === 0 ? (
+            <div className="text-center py-12">
+              <p className="text-text-soft">No packages available at the moment.</p>
             </div>
-
-            {/* Growth Package - Featured */}
-            <div className="card-featured">
-              <div className="text-center mb-6">
-                <div className="inline-block px-3 py-1 text-sm bg-primary text-primary-foreground rounded-full mb-3">Most Popular</div>
-                <h3 className="text-2xl font-bold mb-2">Growth Package</h3>
-                <div className="text-4xl font-bold text-primary mb-4">$7,997</div>
-              </div>
-              
-              <p className="text-text-soft text-center mb-6">
-                Comprehensive automation suite for growing companies ready to scale their operations efficiently. 
-                Multiple interconnected workflows with advanced analytics.
-              </p>
-              
-              <div className="mb-6">
-                <h4 className="font-semibold mb-3">What's Included</h4>
-                <ul className="space-y-3">
-                  <li className="flex items-start gap-3">
-                    <CheckCircle className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />
-                    <span className="text-sm text-text-soft">3-5 interconnected workflows</span>
-                  </li>
-                  <li className="flex items-start gap-3">
-                    <CheckCircle className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />
-                    <span className="text-sm text-text-soft">Unlimited tool integrations</span>
-                  </li>
-                  <li className="flex items-start gap-3">
-                    <CheckCircle className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />
-                    <span className="text-sm text-text-soft">Advanced analytics & reporting</span>
-                  </li>
-                  <li className="flex items-start gap-3">
-                    <CheckCircle className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />
-                    <span className="text-sm text-text-soft">6 weeks implementation</span>
-                  </li>
-                  <li className="flex items-start gap-3">
-                    <CheckCircle className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />
-                    <span className="text-sm text-text-soft">3 months support included</span>
-                  </li>
-                  <li className="flex items-start gap-3">
-                    <CheckCircle className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />
-                    <span className="text-sm text-text-soft">Training for unlimited team members</span>
-                  </li>
-                  <li className="flex items-start gap-3">
-                    <CheckCircle className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />
-                    <span className="text-sm text-text-soft">Custom dashboard development</span>
-                  </li>
-                  <li className="flex items-start gap-3">
-                    <CheckCircle className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />
-                    <span className="text-sm text-text-soft">Performance optimization</span>
-                  </li>
-                </ul>
-              </div>
-              
-              <div className="space-y-3 mb-6">
-                <div className="p-3 bg-background/50 rounded-lg border border-border-subtle">
-                  <div className="text-sm font-medium text-text">Ideal for:</div>
-                  <div className="text-xs text-text-soft">Growing companies, multi-department automation, scaling operations</div>
+          ) : (
+            <div className="grid lg:grid-cols-3 gap-8">
+              {packages.map((pkg) => (
+                <div key={pkg.id} className={`${pkg.is_popular ? 'card-featured' : 'card'} h-full flex flex-col`}>
+                  <div className="text-center mb-6">
+                    {pkg.is_popular && (
+                      <div className="inline-block px-3 py-1 text-sm bg-primary text-primary-foreground rounded-full mb-3">Most Popular</div>
+                    )}
+                    <h3 className="text-2xl font-bold mb-2">{pkg.name}</h3>
+                    <div className="text-4xl font-bold text-primary mb-4">${pkg.price.toLocaleString()}</div>
+                  </div>
+                  
+                  <p className="text-text-soft text-center mb-6 flex-grow">
+                    {pkg.description}
+                  </p>
+                  
+                  <div className="mt-auto">
+                    <div className="mb-6">
+                      <h4 className="font-semibold mb-3">What's Included</h4>
+                      <ul className="space-y-3">
+                        {pkg.features.map((feature, index) => (
+                          <li key={index} className="flex items-start gap-3">
+                            <CheckCircle className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />
+                            <span className="text-sm text-text-soft">{feature}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                    
+                    <Link href={siteConfig.links.freeConsultation} className="btn btn-primary btn-full">
+                      Get Started
+                    </Link>
+                  </div>
                 </div>
-                <div className="p-3 bg-background/50 rounded-lg border border-border-subtle">
-                  <div className="text-sm font-medium text-text">Timeline:</div>
-                  <div className="text-xs text-text-soft">6-8 weeks from kickoff to full deployment</div>
-                </div>
-              </div>
-              
-              <Link href="/#meeting" className="btn btn-primary btn-full">
-                Get Started
-              </Link>
+              ))}
             </div>
-
-            {/* Enterprise Package */}
-            <div className="card">
-              <div className="text-center mb-6">
-                <h3 className="text-2xl font-bold mb-2">Enterprise Package</h3>
-                <div className="text-4xl font-bold text-primary mb-4">$19,997</div>
-              </div>
-              
-              <p className="text-text-soft text-center mb-6">
-                Complete automation transformation for large organizations. Enterprise-grade security, compliance, 
-                and scalability with dedicated support team.
-              </p>
-              
-              <div className="mb-6">
-                <h4 className="font-semibold mb-3">What's Included</h4>
-                <ul className="space-y-3">
-                  <li className="flex items-start gap-3">
-                    <CheckCircle className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />
-                    <span className="text-sm text-text-soft">10+ custom workflow automations</span>
-                  </li>
-                  <li className="flex items-start gap-3">
-                    <CheckCircle className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />
-                    <span className="text-sm text-text-soft">Enterprise integrations & APIs</span>
-                  </li>
-                  <li className="flex items-start gap-3">
-                    <CheckCircle className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />
-                    <span className="text-sm text-text-soft">Advanced security & compliance</span>
-                  </li>
-                  <li className="flex items-start gap-3">
-                    <CheckCircle className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />
-                    <span className="text-sm text-text-soft">12 weeks implementation</span>
-                  </li>
-                  <li className="flex items-start gap-3">
-                    <CheckCircle className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />
-                    <span className="text-sm text-text-soft">6 months support included</span>
-                  </li>
-                  <li className="flex items-start gap-3">
-                    <CheckCircle className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />
-                    <span className="text-sm text-text-soft">Dedicated success manager</span>
-                  </li>
-                  <li className="flex items-start gap-3">
-                    <CheckCircle className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />
-                    <span className="text-sm text-text-soft">Custom training program</span>
-                  </li>
-                  <li className="flex items-start gap-3">
-                    <CheckCircle className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />
-                    <span className="text-sm text-text-soft">24/7 monitoring & support</span>
-                  </li>
-                  <li className="flex items-start gap-3">
-                    <CheckCircle className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />
-                    <span className="text-sm text-text-soft">Quarterly optimization reviews</span>
-                  </li>
-                </ul>
-              </div>
-              
-              <div className="space-y-3 mb-6">
-                <div className="p-3 bg-surface rounded-lg border border-border-subtle">
-                  <div className="text-sm font-medium text-text">Ideal for:</div>
-                  <div className="text-xs text-text-soft">Large enterprises, complex workflows, mission-critical automation</div>
-                </div>
-                <div className="p-3 bg-surface rounded-lg border border-border-subtle">
-                  <div className="text-sm font-medium text-text">Timeline:</div>
-                  <div className="text-xs text-text-soft">12-16 weeks from kickoff to enterprise deployment</div>
-                </div>
-              </div>
-              
-              <Link href="/#meeting" className="btn btn-primary btn-full">
-                Get Started
-              </Link>
-            </div>
-          </div>
+          )}
         </div>
       </section>
 
@@ -413,7 +277,7 @@ export default function Packages() {
               Schedule a free consultation to discuss your specific needs and find the perfect automation package for your business.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Link href="/#meeting" className="btn btn-primary">
+              <Link href={siteConfig.links.freeConsultation} className="btn btn-primary">
                 Schedule Free Consultation
               </Link>
               <Link href="/work" className="btn btn-ghost">

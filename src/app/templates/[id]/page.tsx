@@ -1,8 +1,11 @@
 import Link from 'next/link'
 import Image from 'next/image'
 import { notFound } from 'next/navigation'
-import { ArrowLeft, ArrowRight, Star, Clock, CheckCircle, Zap, Shield, BookOpen, Settings, Users, DollarSign } from 'lucide-react'
-import { templates, type Template } from '@/data/templates'
+import { ArrowLeft, ArrowRight, Star, Clock, CheckCircle, DollarSign, Zap, Shield, Settings, Users, BookOpen } from 'lucide-react'
+import { Template } from '@/lib/supabase'
+import MediaCarousel from '@/components/ui/MediaCarousel'
+import { getDirectImageUrl, getCategoryIcon } from '@/lib/utils'
+import siteConfig from '@/config/site-config'
 
 interface TemplateDetailPageProps {
   params: {
@@ -10,15 +13,48 @@ interface TemplateDetailPageProps {
   }
 }
 
-export async function generateStaticParams() {
-  return templates.map((template) => ({
-    id: template.id,
-  }))
+
+// Fetch template from API
+async function getTemplate(id: string): Promise<Template | null> {
+  try {
+    const response = await fetch(`${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/templates/${id}`, {
+      cache: 'no-store'
+    })
+    
+    if (!response.ok) {
+      return null
+    }
+    
+    const data = await response.json()
+    return data.template || null
+  } catch (error) {
+    console.error('Error fetching template:', error)
+    return null
+  }
+}
+
+// Fetch all templates for related templates
+async function getAllTemplates(): Promise<Template[]> {
+  try {
+    const response = await fetch(`${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/templates`, {
+      cache: 'no-store'
+    })
+    
+    if (!response.ok) {
+      return []
+    }
+    
+    const data = await response.json()
+    return data.templates || []
+  } catch (error) {
+    console.error('Error fetching templates:', error)
+    return []
+  }
 }
 
 export async function generateMetadata({ params }: TemplateDetailPageProps) {
   const resolvedParams = await params
-  const template = templates.find(t => t.id === resolvedParams.id)
+  const template = await getTemplate(resolvedParams.id)
   
   if (!template) {
     return {
@@ -35,13 +71,14 @@ export async function generateMetadata({ params }: TemplateDetailPageProps) {
 export default async function TemplateDetailPage({ params }: TemplateDetailPageProps) {
   const resolvedParams = await params
   
-  const template = templates.find(t => t.id === resolvedParams.id)
+  const template = await getTemplate(resolvedParams.id)
 
   if (!template) {
     notFound()
   }
 
-  const relatedTemplates = templates
+  const allTemplates = await getAllTemplates()
+  const relatedTemplates = allTemplates
     .filter(t => t.id !== template.id && (t.category === template.category || t.platform === template.platform))
     .slice(0, 3)
 
@@ -93,12 +130,12 @@ export default async function TemplateDetailPage({ params }: TemplateDetailPageP
                     <Star key={i} className="h-4 w-4 text-primary fill-current" />
                   ))}
                 </div>
-                {template.popular && (
+                {template.is_popular && (
                   <span className="px-3 py-1 bg-primary text-white text-xs rounded-full font-medium">
                     Popular
                   </span>
                 )}
-                {template.featured && (
+                {template.is_featured && (
                   <span className="px-3 py-1 bg-primary/10 text-primary text-xs rounded-full font-medium border border-primary/20">
                     Featured
                   </span>
@@ -110,22 +147,22 @@ export default async function TemplateDetailPage({ params }: TemplateDetailPageP
               <div className="text-4xl font-bold text-primary mb-6">${template.price}</div>
 
               <p className="text-lg text-text-soft mb-8 leading-relaxed">
-                {template.detailedDescription}
+                {template.description}
               </p>
 
               {/* Key Metrics */}
               <div className="grid grid-cols-3 gap-4 mb-8">
                 <div className="text-center p-4 bg-background/50 rounded-lg border border-border-subtle">
-                  <div className="text-2xl font-bold text-primary mb-1">{template.metrics.value}</div>
-                  <div className="text-text-soft text-xs">{template.metrics.label}</div>
-                </div>
-                <div className="text-center p-4 bg-background/50 rounded-lg border border-border-subtle">
-                  <div className="text-2xl font-bold text-primary mb-1">{template.setupTime}</div>
+                  <div className="text-2xl font-bold text-primary mb-1">{template.setup_time}</div>
                   <div className="text-text-soft text-xs">Setup Time</div>
                 </div>
                 <div className="text-center p-4 bg-background/50 rounded-lg border border-border-subtle">
                   <div className="text-2xl font-bold text-primary mb-1">{template.complexity}</div>
                   <div className="text-text-soft text-xs">Complexity</div>
+                </div>
+                <div className="text-center p-4 bg-background/50 rounded-lg border border-border-subtle">
+                  <div className="text-2xl font-bold text-primary mb-1">{template.platform}</div>
+                  <div className="text-text-soft text-xs">Platform</div>
                 </div>
               </div>
 
@@ -141,27 +178,49 @@ export default async function TemplateDetailPage({ params }: TemplateDetailPageP
 
               {/* CTA Buttons */}
               <div className="flex flex-col sm:flex-row gap-4">
-                <Link href="/#meeting" className="btn btn-primary flex-1">
+                <Link href={siteConfig.links.freeConsultation} className="btn btn-primary flex-1">
                   Purchase Template - ${template.price}
                 </Link>
-                <Link href="/#meeting" className="btn btn-ghost flex-1">
+                <Link href={siteConfig.links.bookDemo} className="btn btn-ghost flex-1">
                   Schedule Demo
                 </Link>
               </div>
             </div>
 
-            {/* Template Preview */}
+            {/* Template Media */}
             <div className="relative">
-              <div className="aspect-video bg-gradient-to-br from-primary/20 to-primary/5 rounded-xl border border-border-subtle p-8 flex items-center justify-center relative overflow-hidden">
-                <div className="absolute inset-0 bg-gradient-to-br from-primary/10 to-transparent"></div>
-                <div className="relative z-10 text-center">
-                  <div className="w-20 h-20 bg-primary/20 rounded-xl flex items-center justify-center mx-auto mb-6">
-                    {getCategoryIcon(template.category)}
-                  </div>
-                  <h3 className="text-xl font-semibold mb-3">{template.category} Workflow</h3>
-                  <p className="text-text-soft">Interactive automation preview</p>
+              {template.media && template.media.length > 0 ? (
+                <MediaCarousel 
+                  media={template.media} 
+                  showThumbnails={true}
+                  aspectRatio="video"
+                  thumbnailPosition="below"
+                  maxThumbnails={8}
+                  className="rounded-xl border border-border-subtle overflow-hidden"
+                />
+              ) : getDirectImageUrl(template.image_url) ? (
+                <div className="aspect-video bg-gradient-to-br from-primary/20 to-primary/5 rounded-xl border border-border-subtle relative overflow-hidden">
+                  <Image 
+                    src={getDirectImageUrl(template.image_url)!} 
+                    alt={template.name}
+                    fill
+                    className="object-cover"
+                    sizes="(max-width: 768px) 100vw, 50vw"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent"></div>
                 </div>
-              </div>
+              ) : (
+                <div className="aspect-video bg-gradient-to-br from-primary/20 to-primary/5 rounded-xl border border-border-subtle p-8 flex items-center justify-center relative overflow-hidden">
+                  <div className="absolute inset-0 bg-gradient-to-br from-primary/10 to-transparent"></div>
+                  <div className="relative z-10 text-center">
+                    <div className="w-20 h-20 bg-primary/20 rounded-xl flex items-center justify-center mx-auto mb-6">
+                      {getCategoryIcon(template.category)}
+                    </div>
+                    <h3 className="text-xl font-semibold mb-3">{template.category} Workflow</h3>
+                    <p className="text-text-soft">Interactive automation preview</p>
+                  </div>
+                </div>
+              )}
               <div className="absolute -top-3 -right-3 w-8 h-8 bg-primary rounded-full animate-pulse flex items-center justify-center">
                 <div className="w-3 h-3 bg-white rounded-full"></div>
               </div>
@@ -191,10 +250,10 @@ export default async function TemplateDetailPage({ params }: TemplateDetailPageP
             <div>
               <h2 className="text-2xl font-bold mb-6">Key Benefits</h2>
               <div className="space-y-4">
-                {template.benefits.map((benefit, index) => (
+                {template.features.map((feature: string, index: number) => (
                   <div key={index} className="flex items-start gap-3">
-                    <div className="w-2 h-2 bg-primary rounded-full flex-shrink-0 mt-2"></div>
-                    <span className="text-text-soft">{benefit}</span>
+                    <CheckCircle className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" />
+                    <span className="text-text-soft">{feature}</span>
                   </div>
                 ))}
               </div>
@@ -252,7 +311,7 @@ export default async function TemplateDetailPage({ params }: TemplateDetailPageP
                       
                       {/* Badges */}
                       <div className="absolute top-3 left-3 flex gap-2">
-                        {relatedTemplate.popular && (
+                        {relatedTemplate.is_popular && (
                           <span className="px-2 py-1 bg-primary text-white text-xs rounded-full font-medium">
                             Popular
                           </span>
@@ -300,10 +359,10 @@ export default async function TemplateDetailPage({ params }: TemplateDetailPageP
               Get started with this proven automation template and transform your {template.category.toLowerCase()} workflow today.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Link href="/#meeting" className="btn btn-primary">
+              <Link href={siteConfig.links.freeConsultation} className="btn btn-primary">
                 Purchase Template - ${template.price}
               </Link>
-              <Link href="/#meeting" className="btn btn-ghost">
+              <Link href={siteConfig.links.strategyCall} className="btn btn-ghost">
                 Schedule Consultation <ArrowRight className="ml-2 h-4 w-4" />
               </Link>
             </div>

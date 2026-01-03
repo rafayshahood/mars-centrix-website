@@ -13,21 +13,6 @@ export const metadata: Metadata = {
   description: "Mars Centrix helps teams design, build, and deploy AI-powered automations that cut busywork, not corners. Get practical AI solutions that actually work.",
   keywords: "AI automation, workflow automation, business automation, AI agency, Mars Centrix",
   authors: [{ name: "Mars Centrix" }],
-  icons: {
-    icon: [
-      { url: "/logo.png", sizes: "32x32", type: "image/png" },
-      { url: "/logo.png", sizes: "16x16", type: "image/png" },
-      { url: "/logo.png", sizes: "48x48", type: "image/png" }
-    ],
-    shortcut: "/logo.png",
-    apple: "/logo.png",
-    other: [
-      {
-        rel: "icon",
-        url: "/logo.png",
-      },
-    ],
-  },
   openGraph: {
     title: "Mars Centrix | AI & Automation Agency",
     description: "Mars Centrix helps teams design, build, and deploy AI-powered automations that cut busywork, not corners.",

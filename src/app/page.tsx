@@ -1,8 +1,49 @@
-import Link from 'next/link'
 import Image from 'next/image'
-import { ArrowRight, CheckCircle, Zap, Shield, Users } from 'lucide-react'
+import Link from 'next/link'
+import { ArrowRight, CheckCircle, Star, Zap, Shield, Users } from 'lucide-react'
+import MediaCarousel from '@/components/ui/MediaCarousel'
+import { Template, Package } from '@/lib/supabase'
+import { getDirectImageUrl, getCategoryIcon } from '@/lib/utils'
+import siteConfig from '@/config/site-config'
 
-export default function Home() {
+// Fetch homepage templates
+async function getHomepageTemplates(): Promise<Template[]> {
+  try {
+    const response = await fetch(`${process.env.NEXT_PUBLIC_SUPABASE_URL ? 'http://localhost:3000' : ''}/api/templates?homepage=true`, {
+      cache: 'no-store' // Always fetch fresh data
+    })
+    if (!response.ok) return []
+    const data = await response.json()
+    return data.templates || []
+  } catch (error) {
+    console.error('Failed to fetch homepage templates:', error)
+    return []
+  }
+}
+
+// Fetch homepage packages
+async function getHomepagePackages(): Promise<Package[]> {
+  try {
+    const response = await fetch(`${process.env.NEXT_PUBLIC_SUPABASE_URL ? 'http://localhost:3000' : ''}/api/packages?homepage=true`, {
+      cache: 'no-store' // Always fetch fresh data
+    })
+    if (!response.ok) return []
+    const data = await response.json()
+    return data.packages || []
+  } catch (error) {
+    console.error('Failed to fetch homepage packages:', error)
+    return []
+  }
+}
+
+
+
+export default async function Home() {
+  // Fetch data from Supabase
+  const [homepageTemplates, homepagePackages] = await Promise.all([
+    getHomepageTemplates(),
+    getHomepagePackages()
+  ])
   return (
     <>
       {/* Hero Section */}
@@ -26,38 +67,39 @@ export default function Home() {
               </div>
               
               <h1 className="text-3xl lg:text-4xl font-bold leading-tight mb-4 bg-gradient-to-r from-text via-text to-primary bg-clip-text text-transparent">
-                Launch AI systems that don't crash your workflow.
+                Ready-to-deploy automation templates & custom AI solutions.
               </h1>
               
               <p className="text-base text-text-soft mb-6 max-w-lg leading-relaxed">
-                Mars Centrix helps teams design, build, and deploy AI-powered automations
-                that cut busywork, not corners. From strategy to production, we turn
-                chaotic processes into reliable, self-orbiting systems.
+                Choose from our library of proven automation templates or get a custom AI solution built for your business. From plug-and-play workflows to enterprise-grade systems.
               </p>
               
               <div className="flex flex-col sm:flex-row gap-3 mb-6">
-                <Link href="https://calendly.com/rafayshahoodtcs7/30min" target="_blank" rel="noopener noreferrer" className="btn btn-primary group">
-                  <span>Schedule strategy call</span>
+                <Link href={siteConfig.links.freeConsultation} className="btn btn-primary group">
+                  <span>Schedule Free Consultation</span>
                   <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
                 </Link>
-                <Link href="#ready-to-deploy" className="btn btn-ghost">
-                  Explore services
+                <Link href="/templates" className="btn btn-ghost">
+                  Browse Templates
+                </Link>
+                <Link href="/packages" className="btn btn-outline">
+                  View Packages
                 </Link>
               </div>
               
               {/* Hero Metrics */}
               <div className="grid grid-cols-3 gap-4">
                 <div className="group">
-                  <div className="text-xl lg:text-2xl font-bold text-primary mb-1 group-hover:scale-110 transition-transform">30–60%</div>
-                  <div className="text-xs text-text-soft">Average reduction in manual ops time</div>
+                  <div className="text-xl lg:text-2xl font-bold text-primary mb-1 group-hover:scale-110 transition-transform">50+</div>
+                  <div className="text-xs text-text-soft">Ready-to-deploy templates</div>
                 </div>
                 <div className="group">
                   <div className="text-xl lg:text-2xl font-bold text-primary mb-1 group-hover:scale-110 transition-transform">2–6 weeks</div>
-                  <div className="text-xs text-text-soft">Typical time to first live automation</div>
+                  <div className="text-xs text-text-soft">Custom solution delivery</div>
                 </div>
                 <div className="group">
-                  <div className="text-xl lg:text-2xl font-bold text-primary mb-1 group-hover:scale-110 transition-transform">99.5%</div>
-                  <div className="text-xs text-text-soft">Target reliability for critical workflows</div>
+                  <div className="text-xl lg:text-2xl font-bold text-primary mb-1 group-hover:scale-110 transition-transform">Free</div>
+                  <div className="text-xs text-text-soft">Strategy consultation</div>
                 </div>
               </div>
             </div>
@@ -238,129 +280,88 @@ export default function Home() {
           </div>
 
           <div className="grid lg:grid-cols-3 gap-6 mb-8">
-            {/* Template 1 */}
-            <div className="group h-full">
-              <div className="card overflow-hidden hover:scale-105 transition-all duration-300 hover:border-primary/30 h-full flex flex-col">
-                <div className="aspect-video bg-gradient-to-br from-primary/20 to-primary/5 relative overflow-hidden">
-                  <div className="absolute inset-0 bg-gradient-to-br from-primary/10 to-transparent"></div>
-                  <div className="absolute inset-4 border-2 border-dashed border-primary/30 rounded-lg flex items-center justify-center">
-                    <div className="text-center">
-                      <div className="w-12 h-12 bg-primary/20 rounded-lg flex items-center justify-center mx-auto mb-3">
-                        <Shield className="h-6 w-6 text-primary" />
+            {homepageTemplates.map((template) => {
+              const IconComponent = getCategoryIcon(template.category)
+              const imageUrl = getDirectImageUrl(template.image_url)
+              
+              return (
+                <div key={template.id} className="group h-full">
+                  <div className="card overflow-hidden hover:scale-105 transition-all duration-300 hover:border-primary/30 h-full flex flex-col">
+                    {template.media && template.media.length > 0 ? (
+                      <MediaCarousel 
+                        media={template.media} 
+                        showThumbnails={template.media.length > 1}
+                        aspectRatio="video"
+                        thumbnailPosition="overlay"
+                        maxThumbnails={4}
+                        className="relative"
+                      />
+                    ) : imageUrl ? (
+                      <div className="aspect-video bg-gradient-to-br from-primary/20 to-primary/5 relative overflow-hidden">
+                        <Image 
+                          src={imageUrl} 
+                          alt={template.name}
+                          fill
+                          className="object-cover"
+                          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent"></div>
+                        <div className="absolute top-3 right-3 px-2 py-1 bg-primary text-white text-xs rounded-full">
+                          Template
+                        </div>
                       </div>
-                      <div className="text-sm font-medium text-primary">Support Workflow</div>
-                      <div className="text-xs text-text-soft mt-1">Visual Template Preview</div>
+                    ) : (
+                      <div className="aspect-video bg-gradient-to-br from-primary/20 to-primary/5 relative overflow-hidden">
+                        <div className="absolute inset-0 bg-gradient-to-br from-primary/10 to-transparent"></div>
+                        <div className="absolute inset-4 border-2 border-dashed border-primary/30 rounded-lg flex items-center justify-center">
+                          <div className="text-center">
+                            <div className="w-12 h-12 bg-primary/20 rounded-lg flex items-center justify-center mx-auto mb-3">
+                              <IconComponent className="h-6 w-6 text-primary" />
+                            </div>
+                            <div className="text-sm font-medium text-primary">{template.category} Workflow</div>
+                            <div className="text-xs text-text-soft mt-1">Visual Template Preview</div>
+                          </div>
+                        </div>
+                        <div className="absolute top-3 right-3 px-2 py-1 bg-primary text-white text-xs rounded-full">
+                          Template
+                        </div>
+                      </div>
+                    )}
+                    
+                    <div className="p-6 flex-1 flex flex-col">
+                      <h3 className="text-lg font-semibold mb-2 group-hover:text-primary transition-colors">{template.name}</h3>
+                      <p className="text-text-soft text-sm mb-4 flex-grow">{template.description}</p>
+                      
+                      <div className="mt-auto">
+                        <div className="flex items-center justify-between text-xs text-text-soft mb-4">
+                          <span>{template.setup_time} setup</span>
+                          <span className="text-lg font-bold text-primary">${template.price}</span>
+                        </div>
+                        
+                        <div className="flex flex-wrap gap-2 mb-4">
+                          {template.integrations.slice(0, 3).map((integration, index) => (
+                            <span key={index} className="px-2 py-1 bg-primary/10 text-primary text-xs rounded-full">
+                              {integration}
+                            </span>
+                          ))}
+                        </div>
+                        
+                        <Link href={`/templates/${template.id}`} className="btn btn-primary btn-full">
+                          View Details
+                        </Link>
+                      </div>
                     </div>
                   </div>
-                  <div className="absolute top-3 right-3 px-2 py-1 bg-primary text-white text-xs rounded-full">
-                    Template
-                  </div>
                 </div>
-                
-                <div className="p-6 flex-1 flex flex-col">
-                  <h3 className="text-lg font-semibold mb-2 group-hover:text-primary transition-colors">Support Ticket Triage</h3>
-                  <p className="text-text-soft text-sm mb-4">AI-powered ticket classification and routing with auto-responses for common issues.</p>
-                  
-                  <div className="flex items-center justify-between text-xs text-text-soft mb-4">
-                    <span>65% faster response</span>
-                    <span className="text-lg font-bold text-primary">$497</span>
-                  </div>
-                  
-                  <div className="flex flex-wrap gap-2 mb-4">
-                    <span className="px-2 py-1 bg-primary/10 text-primary text-xs rounded-full">Zendesk</span>
-                    <span className="px-2 py-1 bg-primary/10 text-primary text-xs rounded-full">OpenAI</span>
-                    <span className="px-2 py-1 bg-primary/10 text-primary text-xs rounded-full">Slack</span>
-                  </div>
-                  
-                  <Link href="/templates/support-ticket-triage" className="btn btn-primary btn-full">
-                    View Details
-                  </Link>
-                </div>
-              </div>
-            </div>
-
-            {/* Template 2 */}
-            <div className="group h-full">
-              <div className="card overflow-hidden hover:scale-105 transition-all duration-300 hover:border-primary/30 h-full flex flex-col">
-                <div className="aspect-video bg-gradient-to-br from-primary/20 to-primary/5 relative overflow-hidden">
-                  <div className="absolute inset-0 bg-gradient-to-br from-primary/10 to-transparent"></div>
-                  <div className="absolute inset-4 border-2 border-dashed border-primary/30 rounded-lg flex items-center justify-center">
-                    <div className="text-center">
-                      <div className="w-12 h-12 bg-primary/20 rounded-lg flex items-center justify-center mx-auto mb-3">
-                        <Zap className="h-6 w-6 text-primary" />
-                      </div>
-                      <div className="text-sm font-medium text-primary">Sales Workflow</div>
-                      <div className="text-xs text-text-soft mt-1">Visual Template Preview</div>
-                    </div>
-                  </div>
-                  <div className="absolute top-3 right-3 px-2 py-1 bg-primary text-white text-xs rounded-full">
-                    Template
-                  </div>
-                </div>
-                
-                <div className="p-6 flex-1 flex flex-col">
-                  <h3 className="text-lg font-semibold mb-2 group-hover:text-primary transition-colors">Lead Scoring & Nurturing</h3>
-                  <p className="text-text-soft text-sm mb-4">Automated lead qualification and personalized follow-up sequences.</p>
-                  
-                  <div className="flex items-center justify-between text-xs text-text-soft mb-4">
-                    <span>40% higher conversion</span>
-                    <span className="text-lg font-bold text-primary">$697</span>
-                  </div>
-                  
-                  <div className="flex flex-wrap gap-2 mb-4">
-                    <span className="px-2 py-1 bg-primary/10 text-primary text-xs rounded-full">HubSpot</span>
-                    <span className="px-2 py-1 bg-primary/10 text-primary text-xs rounded-full">Zapier</span>
-                    <span className="px-2 py-1 bg-primary/10 text-primary text-xs rounded-full">Gmail</span>
-                  </div>
-                  
-                  <Link href="/templates/sales-pipeline-automation" className="btn btn-primary btn-full">
-                    View Details
-                  </Link>
-                </div>
-              </div>
-            </div>
-
-            {/* Template 3 */}
-            <div className="group h-full">
-              <div className="card overflow-hidden hover:scale-105 transition-all duration-300 hover:border-primary/30 h-full flex flex-col">
-                <div className="aspect-video bg-gradient-to-br from-primary/20 to-primary/5 relative overflow-hidden">
-                  <div className="absolute inset-0 bg-gradient-to-br from-primary/10 to-transparent"></div>
-                  <div className="absolute inset-4 border-2 border-dashed border-primary/30 rounded-lg flex items-center justify-center">
-                    <div className="text-center">
-                      <div className="w-12 h-12 bg-primary/20 rounded-lg flex items-center justify-center mx-auto mb-3">
-                        <CheckCircle className="h-6 w-6 text-primary" />
-                      </div>
-                      <div className="text-sm font-medium text-primary">Document Workflow</div>
-                      <div className="text-xs text-text-soft mt-1">Visual Template Preview</div>
-                    </div>
-                  </div>
-                  <div className="absolute top-3 right-3 px-2 py-1 bg-primary text-white text-xs rounded-full">
-                    Template
-                  </div>
-                </div>
-                
-                <div className="p-6 flex-1 flex flex-col">
-                  <h3 className="text-lg font-semibold mb-2 group-hover:text-primary transition-colors">Document Processing Hub</h3>
-                  <p className="text-text-soft text-sm mb-4">Intelligent document extraction, validation and routing automation.</p>
-                  
-                  <div className="flex items-center justify-between text-xs text-text-soft mb-4">
-                    <span>10x faster processing</span>
-                    <span className="text-lg font-bold text-primary">$597</span>
-                  </div>
-                  
-                  <div className="flex flex-wrap gap-2 mb-4">
-                    <span className="px-2 py-1 bg-primary/10 text-primary text-xs rounded-full">Google Drive</span>
-                    <span className="px-2 py-1 bg-primary/10 text-primary text-xs rounded-full">Airtable</span>
-                    <span className="px-2 py-1 bg-primary/10 text-primary text-xs rounded-full">Notion</span>
-                  </div>
-                  
-                  <Link href="/templates/document-processing-hub" className="btn btn-primary btn-full">
-                    View Details
-                  </Link>
-                </div>
-              </div>
-            </div>
+              )
+            })}
           </div>
+
+          {homepageTemplates.length === 0 && (
+            <div className="text-center py-8">
+              <p className="text-text-soft">No templates are currently set to display on the homepage.</p>
+            </div>
+          )}
 
           <div className="text-center">
             <Link href="/templates" className="btn btn-ghost group">
@@ -383,294 +384,72 @@ export default function Home() {
           </div>
 
           <div className="grid lg:grid-cols-3 gap-6">
-            {/* Starter Package */}
-            <div className="card p-6 hover:scale-105 transition-all duration-300 hover:border-primary/30">
-              <div className="text-center mb-6">
-                <div className="w-16 h-16 bg-primary/20 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <Zap className="h-8 w-8 text-primary" />
+            {homepagePackages.map((pkg, index) => {
+              const getPackageIcon = (name: string) => {
+                if (name.toLowerCase().includes('starter')) return Zap
+                if (name.toLowerCase().includes('professional')) return Shield
+                if (name.toLowerCase().includes('enterprise')) return Users
+                return Zap
+              }
+              
+              const IconComponent = getPackageIcon(pkg.name)
+              const isPopular = pkg.is_popular
+              
+              return (
+                <div key={pkg.id} className={`${isPopular ? 'card-featured' : 'card'} p-6 hover:scale-105 transition-all duration-300 ${!isPopular ? 'hover:border-primary/30' : ''} relative h-full flex flex-col`}>
+                  {isPopular && (
+                    <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
+                      <span className="bg-primary text-white px-4 py-1 rounded-full text-xs font-medium">
+                        Most Popular
+                      </span>
+                    </div>
+                  )}
+                  
+                  <div className="text-center mb-6">
+                    <div className="w-16 h-16 bg-primary/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                      <IconComponent className="h-8 w-8 text-primary" />
+                    </div>
+                    <h3 className="text-xl font-semibold mb-2">{pkg.name}</h3>
+                    <p className="text-text-soft text-sm">{pkg.description}</p>
+                  </div>
+                  
+                  <div className="text-center mb-6">
+                    <div className="text-3xl font-bold text-primary mb-2">
+                      {pkg.price >= 10000 ? 'Custom' : `$${pkg.price.toLocaleString()}`}
+                    </div>
+                    <div className="text-text-soft text-sm">
+                      {pkg.price >= 10000 ? 'Based on requirements' : 'One-time setup'}
+                    </div>
+                  </div>
+                  
+                  <ul className="space-y-3 mb-6 text-sm flex-grow">
+                    {pkg.features.map((feature, featureIndex) => (
+                      <li key={featureIndex} className="flex items-center gap-3">
+                        <CheckCircle className="h-4 w-4 text-primary flex-shrink-0" />
+                        <span>{feature}</span>
+                      </li>
+                    ))}
+                  </ul>
+                  
+                  <div className="mt-auto">
+                    <Link href="/packages" className={`btn ${isPopular ? 'btn-primary' : 'btn-ghost'} btn-full`}>
+                      {pkg.price >= 10000 ? 'Contact Sales' : 'Get Started'}
+                    </Link>
+                  </div>
                 </div>
-                <h3 className="text-xl font-semibold mb-2">Starter</h3>
-                <p className="text-text-soft text-sm">Perfect for small teams getting started with automation</p>
-              </div>
-              
-              <div className="text-center mb-6">
-                <div className="text-3xl font-bold text-primary mb-2">$2,997</div>
-                <div className="text-text-soft text-sm">One-time setup</div>
-              </div>
-              
-              <ul className="space-y-3 mb-6 text-sm">
-                <li className="flex items-center gap-3">
-                  <CheckCircle className="h-4 w-4 text-primary flex-shrink-0" />
-                  <span>1-2 automation workflows</span>
-                </li>
-                <li className="flex items-center gap-3">
-                  <CheckCircle className="h-4 w-4 text-primary flex-shrink-0" />
-                  <span>Basic integrations setup</span>
-                </li>
-                <li className="flex items-center gap-3">
-                  <CheckCircle className="h-4 w-4 text-primary flex-shrink-0" />
-                  <span>30 days support</span>
-                </li>
-                <li className="flex items-center gap-3">
-                  <CheckCircle className="h-4 w-4 text-primary flex-shrink-0" />
-                  <span>Documentation & training</span>
-                </li>
-              </ul>
-              
-              <Link href="/packages" className="btn btn-ghost btn-full">
-                Get Started
-              </Link>
-            </div>
-
-            {/* Professional Package */}
-            <div className="card-featured p-6 hover:scale-105 transition-all duration-300 relative">
-              <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
-                <span className="bg-primary text-white px-4 py-1 rounded-full text-xs font-medium">
-                  Most Popular
-                </span>
-              </div>
-              
-              <div className="text-center mb-6">
-                <div className="w-16 h-16 bg-primary/20 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <Shield className="h-8 w-8 text-primary" />
-                </div>
-                <h3 className="text-xl font-semibold mb-2">Professional</h3>
-                <p className="text-text-soft text-sm">Comprehensive automation for growing businesses</p>
-              </div>
-              
-              <div className="text-center mb-6">
-                <div className="text-3xl font-bold text-primary mb-2">$7,997</div>
-                <div className="text-text-soft text-sm">One-time setup</div>
-              </div>
-              
-              <ul className="space-y-3 mb-6 text-sm">
-                <li className="flex items-center gap-3">
-                  <CheckCircle className="h-4 w-4 text-primary flex-shrink-0" />
-                  <span>3-5 automation workflows</span>
-                </li>
-                <li className="flex items-center gap-3">
-                  <CheckCircle className="h-4 w-4 text-primary flex-shrink-0" />
-                  <span>Advanced integrations & AI</span>
-                </li>
-                <li className="flex items-center gap-3">
-                  <CheckCircle className="h-4 w-4 text-primary flex-shrink-0" />
-                  <span>90 days support</span>
-                </li>
-                <li className="flex items-center gap-3">
-                  <CheckCircle className="h-4 w-4 text-primary flex-shrink-0" />
-                  <span>Custom dashboard</span>
-                </li>
-                <li className="flex items-center gap-3">
-                  <CheckCircle className="h-4 w-4 text-primary flex-shrink-0" />
-                  <span>Team training sessions</span>
-                </li>
-              </ul>
-              
-              <Link href="/packages" className="btn btn-primary btn-full">
-                Get Started
-              </Link>
-            </div>
-
-            {/* Enterprise Package */}
-            <div className="card p-6 hover:scale-105 transition-all duration-300 hover:border-primary/30">
-              <div className="text-center mb-6">
-                <div className="w-16 h-16 bg-primary/20 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <Users className="h-8 w-8 text-primary" />
-                </div>
-                <h3 className="text-xl font-semibold mb-2">Enterprise</h3>
-                <p className="text-text-soft text-sm">Full-scale automation transformation</p>
-              </div>
-              
-              <div className="text-center mb-6">
-                <div className="text-3xl font-bold text-primary mb-2">Custom</div>
-                <div className="text-text-soft text-sm">Based on requirements</div>
-              </div>
-              
-              <ul className="space-y-3 mb-6 text-sm">
-                <li className="flex items-center gap-3">
-                  <CheckCircle className="h-4 w-4 text-primary flex-shrink-0" />
-                  <span>Unlimited workflows</span>
-                </li>
-                <li className="flex items-center gap-3">
-                  <CheckCircle className="h-4 w-4 text-primary flex-shrink-0" />
-                  <span>Enterprise integrations</span>
-                </li>
-                <li className="flex items-center gap-3">
-                  <CheckCircle className="h-4 w-4 text-primary flex-shrink-0" />
-                  <span>Dedicated support</span>
-                </li>
-                <li className="flex items-center gap-3">
-                  <CheckCircle className="h-4 w-4 text-primary flex-shrink-0" />
-                  <span>Custom development</span>
-                </li>
-                <li className="flex items-center gap-3">
-                  <CheckCircle className="h-4 w-4 text-primary flex-shrink-0" />
-                  <span>SLA guarantees</span>
-                </li>
-              </ul>
-              
-              <Link href="/packages" className="btn btn-ghost btn-full">
-                Contact Sales
-              </Link>
-            </div>
+              )
+            })}
           </div>
+
+          {homepagePackages.length === 0 && (
+            <div className="text-center py-8">
+              <p className="text-text-soft">No packages are currently set to display on the homepage.</p>
+            </div>
+          )}
         </div>
       </section>
 
-      {/* About Section */}
-      <section className="section" id="about">
-        <div className="container">
-          <div className="text-center mb-8">
-            <p className="kicker">Why Mars Centrix</p>
-            <h2 className="text-2xl lg:text-3xl font-bold mb-3 max-w-4xl mx-auto">
-              AI automation that fits your workflow, not the other way around.
-            </h2>
-            <p className="text-base text-text-soft max-w-3xl mx-auto">
-              Most AI implementations fail because they're built by people who've never actually used the tools they're trying to automate. 
-              We're different. Every system we build includes clear human oversight, transparent decision-making, and graceful failure modes.
-            </p>
-          </div>
 
-          <div className="grid lg:grid-cols-3 gap-4 mb-8">
-            <div className="card p-5 text-center group hover:scale-105 transition-all duration-300">
-              <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center mx-auto mb-4 group-hover:bg-primary/30 transition-colors">
-                <CheckCircle className="h-6 w-6 text-primary" />
-              </div>
-              <h3 className="text-lg font-semibold mb-3">Transparent & Auditable</h3>
-              <p className="text-text-soft text-sm">Every decision point is logged and reviewable. No black boxes, ever. Full visibility into how your automations make decisions.</p>
-            </div>
-
-            <div className="card p-5 text-center group hover:scale-105 transition-all duration-300">
-              <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center mx-auto mb-4 group-hover:bg-primary/30 transition-colors">
-                <Shield className="h-6 w-6 text-primary" />
-              </div>
-              <h3 className="text-lg font-semibold mb-3">Human-First Design</h3>
-              <p className="text-text-soft text-sm">AI amplifies your team's capabilities rather than replacing them. Built with clear intervention points and human oversight.</p>
-            </div>
-
-            <div className="card p-5 text-center group hover:scale-105 transition-all duration-300">
-              <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center mx-auto mb-4 group-hover:bg-primary/30 transition-colors">
-                <Zap className="h-6 w-6 text-primary" />
-              </div>
-              <h3 className="text-lg font-semibold mb-3">Real-World Integration</h3>
-              <p className="text-text-soft text-sm">Works with your existing tools and processes from day one. No need to change your entire workflow to accommodate AI.</p>
-            </div>
-          </div>
-
-        </div>
-      </section>
-
-      {/* Custom Projects Section */}
-      <section className="section" id="projects">
-        <div className="container">
-          <div className="section-header">
-            <p className="kicker">Our Work</p>
-            <h2 className="text-2xl lg:text-3xl font-bold mb-3">Custom projects that deliver results.</h2>
-            <p className="text-base text-text-soft max-w-2xl mx-auto">
-              Real automation projects we've built for companies across industries. Each solution is tailored to specific workflows and business needs.
-            </p>
-          </div>
-
-          <div className="grid lg:grid-cols-3 gap-6">
-            {/* Project 1 */}
-            <div className="group">
-              <div className="card p-6 hover:scale-105 transition-all duration-300 hover:border-primary/30">
-                <div className="aspect-video bg-gradient-to-br from-primary/20 to-primary/5 rounded-lg mb-4 flex items-center justify-center relative overflow-hidden">
-                  <div className="absolute inset-0 bg-gradient-to-br from-primary/10 to-transparent"></div>
-                  <div className="relative z-10 text-center">
-                    <div className="w-12 h-12 bg-primary/20 rounded-lg flex items-center justify-center mx-auto mb-3">
-                      <Zap className="h-6 w-6 text-primary" />
-                    </div>
-                    <div className="text-sm font-medium text-primary">E-commerce Automation</div>
-                  </div>
-                  <div className="absolute top-2 right-2 w-2 h-2 bg-primary rounded-full animate-pulse"></div>
-                </div>
-                
-                <h3 className="text-lg font-semibold mb-2 group-hover:text-primary transition-colors">Order Processing Pipeline</h3>
-                <p className="text-text-soft text-sm mb-4">Automated order validation, inventory sync, and fulfillment coordination for a $2M+ e-commerce store.</p>
-                
-                <div className="flex items-center justify-between text-xs text-text-soft mb-4">
-                  <span>85% faster processing</span>
-                  <span>99.2% accuracy</span>
-                </div>
-                
-                <div className="flex flex-wrap gap-2">
-                  <span className="px-2 py-1 bg-primary/10 text-primary text-xs rounded-full">Shopify</span>
-                  <span className="px-2 py-1 bg-primary/10 text-primary text-xs rounded-full">Zapier</span>
-                  <span className="px-2 py-1 bg-primary/10 text-primary text-xs rounded-full">Slack</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Project 2 */}
-            <div className="group">
-              <div className="card p-6 hover:scale-105 transition-all duration-300 hover:border-primary/30">
-                <div className="aspect-video bg-gradient-to-br from-primary/20 to-primary/5 rounded-lg mb-4 flex items-center justify-center relative overflow-hidden">
-                  <div className="absolute inset-0 bg-gradient-to-br from-primary/10 to-transparent"></div>
-                  <div className="relative z-10 text-center">
-                    <div className="w-12 h-12 bg-primary/20 rounded-lg flex items-center justify-center mx-auto mb-3">
-                      <Shield className="h-6 w-6 text-primary" />
-                    </div>
-                    <div className="text-sm font-medium text-primary">Support Automation</div>
-                  </div>
-                  <div className="absolute top-2 right-2 w-2 h-2 bg-primary rounded-full animate-pulse"></div>
-                </div>
-                
-                <h3 className="text-lg font-semibold mb-2 group-hover:text-primary transition-colors">AI Support Triage System</h3>
-                <p className="text-text-soft text-sm mb-4">Intelligent ticket routing and auto-responses that reduced support team workload by 60%.</p>
-                
-                <div className="flex items-center justify-between text-xs text-text-soft mb-4">
-                  <span>60% less manual work</span>
-                  <span>4x faster response</span>
-                </div>
-                
-                <div className="flex flex-wrap gap-2">
-                  <span className="px-2 py-1 bg-primary/10 text-primary text-xs rounded-full">Zendesk</span>
-                  <span className="px-2 py-1 bg-primary/10 text-primary text-xs rounded-full">OpenAI</span>
-                  <span className="px-2 py-1 bg-primary/10 text-primary text-xs rounded-full">Teams</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Project 3 */}
-            <div className="group">
-              <div className="card p-6 hover:scale-105 transition-all duration-300 hover:border-primary/30">
-                <div className="aspect-video bg-gradient-to-br from-primary/20 to-primary/5 rounded-lg mb-4 flex items-center justify-center relative overflow-hidden">
-                  <div className="absolute inset-0 bg-gradient-to-br from-primary/10 to-transparent"></div>
-                  <div className="relative z-10 text-center">
-                    <div className="w-12 h-12 bg-primary/20 rounded-lg flex items-center justify-center mx-auto mb-3">
-                      <CheckCircle className="h-6 w-6 text-primary" />
-                    </div>
-                    <div className="text-sm font-medium text-primary">Sales Automation</div>
-                  </div>
-                  <div className="absolute top-2 right-2 w-2 h-2 bg-primary rounded-full animate-pulse"></div>
-                </div>
-                
-                <h3 className="text-lg font-semibold mb-2 group-hover:text-primary transition-colors">Lead Scoring & Nurturing</h3>
-                <p className="text-text-soft text-sm mb-4">Automated lead qualification and personalized follow-up sequences that increased conversion by 40%.</p>
-                
-                <div className="flex items-center justify-between text-xs text-text-soft mb-4">
-                  <span>40% higher conversion</span>
-                  <span>5+ hours saved/week</span>
-                </div>
-                
-                <div className="flex flex-wrap gap-2">
-                  <span className="px-2 py-1 bg-primary/10 text-primary text-xs rounded-full">HubSpot</span>
-                  <span className="px-2 py-1 bg-primary/10 text-primary text-xs rounded-full">Zapier</span>
-                  <span className="px-2 py-1 bg-primary/10 text-primary text-xs rounded-full">Gmail</span>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div className="text-center mt-8">
-            <Link href="/work" className="btn btn-primary group">
-              <span>View All Projects</span>
-              <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
-            </Link>
-          </div>
-        </div>
-      </section>
 
       {/* Testimonials Section */}
       <section className="section section-alt" id="testimonials">

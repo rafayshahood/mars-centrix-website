@@ -63,7 +63,7 @@ export default function Footer() {
                   </Link>
                 </li>
                 <li>
-                  <Link href="/#meeting" className="text-text-soft hover:text-primary transition-colors">
+                  <Link href="/contact" className="text-text-soft hover:text-primary transition-colors">
                     Consultation
                   </Link>
                 </li>
@@ -90,7 +90,7 @@ export default function Footer() {
                   </Link>
                 </li>
                 <li>
-                  <Link href="/#meeting" className="text-text-soft hover:text-primary transition-colors">
+                  <Link href="/contact" className="text-text-soft hover:text-primary transition-colors">
                     Contact
                   </Link>
                 </li>

@@ -15,6 +15,7 @@ export default function Header() {
     { name: 'Our Work', href: '/work' },
     { name: 'Templates', href: '/templates' },
     { name: 'Packages', href: '/packages' },
+    { name: 'Contact', href: '/contact' },
   ]
 
   return (
@@ -47,7 +48,7 @@ export default function Header() {
 
           {/* CTA Button */}
           <div className="hidden lg:block">
-            <Link href="https://calendly.com/rafayshahoodtcs7/30min" target="_blank" rel="noopener noreferrer" className="btn btn-outline btn-small">
+            <Link href="/contact" className="btn btn-outline btn-small">
               Free Consultation
             </Link>
           </div>
@@ -77,9 +78,7 @@ export default function Header() {
                 </Link>
               ))}
               <Link
-                href="https://calendly.com/rafayshahoodtcs7/30min"
-                target="_blank"
-                rel="noopener noreferrer"
+                href="/contact"
                 className="btn btn-outline btn-small mt-4 self-start"
                 onClick={() => setIsMenuOpen(false)}
               >
